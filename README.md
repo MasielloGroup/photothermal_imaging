@@ -1,26 +1,25 @@
-# Confocal Photothermal Image Pipeline
-This set of files creates confocal photothermal images by calculating the light scattered by metallic nanoparticle assemblies.
+# Confocal Photothermal Imaging Pipeline
 
-### Step 1. Create a shape file that contains a discretized version of the nanoparticle assembly. 
-A sample fortran shapemaker file is included, called "shape.f90". If you choose not to use this file, make sure you update the scripts which submit the job to reflect the rastery, rasterz parameters. Otherwise,
-* Adjust "shape.f90" to contain the shape that you would like to run. Make sure you do not change the variables "rastery" and "rasterz". These variables will also still need to be added onto your y and z directions. Note that to make the photothermal image, the shape is rastered across the beam centered at (0,0). 
-### Step 2. Update the values in "parameters.input" to model the system of interest.
-At a minimum, make sure you adjust: 
-* Line 5 to the wavlength (in microns) of your desired pump / heating beam.
-* Line 17 to the dipole spacing you've decided upon according to your shape.f90 file
+This is set up to create a photothermal image of a single spherical nanoparticle. 
 
-### Step 3. Run a single test point to ensure no errors.
-* This will launch a single calculation (i.e. a single raster position.)
-* Adjust "ystart" and "z" in the file "launch_temp" to be the position (in lattice units) where you'd like your shape to be.
-* To launch the calculation, simply type "sbatch launch_single.slurm" in the command line.
+## Instructions to Make Photothermal Image 
+1. Update `parameters.py` to adjust the shape, materials involved (metal, background, substrate refractive indices and thermal conductivities), laser parameters, and imaging conditions.  
 
-### Step 4. Identify the 2D image window.
-* Change files "launch_temp1", "launch_temp2", and launch_ful.sh" accordingly.
-* The variables "yrange", "ystart" in "launch_temp1" and "launch_temp2" should be updated to cover the y ranges you wish to span. 
-* The variables "zrange", "zstart" in launch_full.sh should be updated to cover the z ranges.
-* The variables "ss" in all three files should be identical. This is the step size and can be adjusted to take more / less points in the psf.
+2. The current submission scripts are written as slurm files. If running on the cluster, simply change Line 20 in `launch_full.slurm`with the jobname you desire. 
 
-### Step 5. Luanch the simulations.
-To launch, type "bash launch_full.sh" into command line.
-    
-   
+3. Read through `batch.slurm` and make sure you have access to the source codes called. (E.g., lines 45, 65, 89, 115.) You will need [g-dda](http://github.com/MasielloGroup/g-dda) and [t-dda](http://github.com/MasielloGroup/t-dda) if you are not running these scripts on UW's Mox Hyak. 
+
+4. The full image can be run by running `launch_full.slurm` (type `sbatch launch_full.slurm` if submitting to a cluster).
+
+## Be Aware
+* When setting step size of the detection area in `parameters.py` (lines 43 and 45), make sure the step size goes in evenly with the range you've selected. `g-dda` always ends with the maximum value, regardless of wheter or not the last step size equals the step size you've set.
+
+
+## Extensions
+* To run different shapes, you will need to edit `spheremaker.py` to make the shape you desire, and edit `parameters.py` to incorportate any parameters you wish to have set there. 
+
+* To run a single raster point (e.g. calculate the photothermal signal at one beam position), change `image_width` in `parameters.py` to 0, and run `single.slurm`.
+
+* If you'd like to not integrate the fields across the detector area, and instead only calculate the photothermal signal on the optical axis, move the two files outside of `no_integration` into the main folder. Adjust the theta and phi range to be smaller than step size in `parameters.py`. (E.g. `phi_info: 0 0.1 0.5`). Then, run `noint_single.slurm`. Note this is only set up to run a single raster point, and not a full photothermal image. 
+
+
